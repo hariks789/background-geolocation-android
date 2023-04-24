@@ -33,7 +33,7 @@ public class NotificationHelper {
         public NotificationFactory(Context context) {
             mContext = context;
             mResolver = ResourceResolver.newInstance(context);
-            logger =  LoggerManager.getLogger(NotificationFactory.class);
+            logger = LoggerManager.getLogger(NotificationFactory.class);
         }
 
         private Integer parseNotificationIconColor(String color) {
@@ -48,11 +48,13 @@ public class NotificationHelper {
             return iconColor;
         }
 
-        public Notification getNotification(String title, String text, String largeIcon, String smallIcon, String color) {
+        public Notification getNotification(String title, String text, String largeIcon, String smallIcon,
+                String color) {
             Context appContext = mContext.getApplicationContext();
 
             // Build a Notification required for running service in foreground.
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext, NotificationHelper.SERVICE_CHANNEL_ID);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext,
+                    NotificationHelper.SERVICE_CHANNEL_ID);
 
             builder.setContentTitle(title);
             builder.setContentText(text);
@@ -62,7 +64,8 @@ public class NotificationHelper {
                 builder.setSmallIcon(android.R.drawable.ic_menu_mylocation);
             }
             if (largeIcon != null && !largeIcon.isEmpty()) {
-                builder.setLargeIcon(BitmapFactory.decodeResource(appContext.getResources(), mResolver.getDrawable(largeIcon)));
+                builder.setLargeIcon(
+                        BitmapFactory.decodeResource(appContext.getResources(), mResolver.getDrawable(largeIcon)));
             }
             if (color != null && !color.isEmpty()) {
                 builder.setColor(this.parseNotificationIconColor(color));
@@ -74,12 +77,14 @@ public class NotificationHelper {
             if (launchIntent != null) {
                 // NOTICE: testing apps might not have registered launch intent
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                PendingIntent contentIntent = PendingIntent.getActivity(appContext, 0, launchIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                PendingIntent contentIntent = PendingIntent.getActivity(appContext, 0, launchIntent,
+                        PendingIntent.FLAG_CANCEL_CURRENT);
                 builder.setContentIntent(contentIntent);
             }
 
             Notification notification = builder.build();
-            notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_FOREGROUND_SERVICE | Notification.FLAG_NO_CLEAR;
+            notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_FOREGROUND_SERVICE
+                    | Notification.FLAG_NO_CLEAR;
 
             return notification;
         }
@@ -90,7 +95,8 @@ public class NotificationHelper {
             String appName = ResourceResolver.newInstance(context).getString(("app_name"));
             // Create the NotificationChannel, but only on API 26+ because
             // the NotificationChannel class is new and not in the support library
-            android.app.NotificationManager notificationManager = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            android.app.NotificationManager notificationManager = (android.app.NotificationManager) context
+                    .getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.createNotificationChannel(createServiceChannel(appName));
             notificationManager.createNotificationChannel(createSyncChannel());
             notificationManager.createNotificationChannel(createAndroidPermissionsChannel(appName));
@@ -102,7 +108,8 @@ public class NotificationHelper {
             String appName = ResourceResolver.newInstance(context).getString(("app_name"));
             // Create the NotificationChannel, but only on API 26+ because
             // the NotificationChannel class is new and not in the support library
-            android.app.NotificationManager notificationManager = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            android.app.NotificationManager notificationManager = (android.app.NotificationManager) context
+                    .getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.createNotificationChannel(createServiceChannel(appName));
         }
     }
@@ -111,29 +118,33 @@ public class NotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create the NotificationChannel, but only on API 26+ because
             // the NotificationChannel class is new and not in the support library
-            android.app.NotificationManager notificationManager = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            android.app.NotificationManager notificationManager = (android.app.NotificationManager) context
+                    .getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.createNotificationChannel(createSyncChannel());
         }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static NotificationChannel createServiceChannel(CharSequence name) {
-        NotificationChannel channel = new NotificationChannel(SERVICE_CHANNEL_ID, name, android.app.NotificationManager.IMPORTANCE_LOW);
+        NotificationChannel channel = new NotificationChannel(SERVICE_CHANNEL_ID, name,
+                android.app.NotificationManager.IMPORTANCE_LOW);
         channel.enableVibration(false);
         return channel;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static NotificationChannel createSyncChannel(){
-        NotificationChannel channel = new NotificationChannel(SYNC_CHANNEL_ID, SYNC_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
+    public static NotificationChannel createSyncChannel() {
+        NotificationChannel channel = new NotificationChannel(SYNC_CHANNEL_ID, SYNC_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_LOW);
         channel.setDescription(SYNC_CHANNEL_DESCRIPTION);
         channel.enableVibration(false);
         return channel;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static NotificationChannel createAndroidPermissionsChannel(CharSequence name ){
-        NotificationChannel channel = new NotificationChannel(ANDROID_PERMISSIONS_CHANNEL_ID, name, NotificationManager.IMPORTANCE_HIGH);
+    public static NotificationChannel createAndroidPermissionsChannel(CharSequence name) {
+        NotificationChannel channel = new NotificationChannel(ANDROID_PERMISSIONS_CHANNEL_ID, name,
+                NotificationManager.IMPORTANCE_HIGH);
         channel.enableVibration(false);
         return channel;
     }

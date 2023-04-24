@@ -23,7 +23,8 @@ import com.marianhello.bgloc.data.BackgroundActivity;
 
 import java.util.ArrayList;
 
-public class ActivityRecognitionLocationProvider extends AbstractLocationProvider implements GoogleApiClient.ConnectionCallbacks,
+public class ActivityRecognitionLocationProvider extends AbstractLocationProvider
+        implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private static final String TAG = ActivityRecognitionLocationProvider.class.getSimpleName();
@@ -49,7 +50,8 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
         super.onCreate();
 
         Intent detectedActivitiesIntent = new Intent(DETECTED_ACTIVITY_UPDATE);
-        detectedActivitiesPI = PendingIntent.getBroadcast(mContext, 9002, detectedActivitiesIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        detectedActivitiesPI = PendingIntent.getBroadcast(mContext, 9002, detectedActivitiesIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
         registerReceiver(detectedActivitiesReceiver, new IntentFilter(DETECTED_ACTIVITY_UPDATE));
     }
 
@@ -99,7 +101,9 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
     }
 
     public void startTracking() {
-        if (isTracking) { return; }
+        if (isTracking) {
+            return;
+        }
 
         Integer priority = translateDesiredAccuracy(mConfig.getDesiredAccuracy());
         LocationRequest locationRequest = LocationRequest.create()
@@ -110,7 +114,10 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
         try {
             LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
             isTracking = true;
-            logger.debug("Start tracking with priority={} fastestInterval={} interval={} activitiesInterval={} stopOnStillActivity={}", priority, mConfig.getFastestInterval(), mConfig.getInterval(), mConfig.getActivitiesInterval(), mConfig.getStopOnStillActivity());
+            logger.debug(
+                    "Start tracking with priority={} fastestInterval={} interval={} activitiesInterval={} stopOnStillActivity={}",
+                    priority, mConfig.getFastestInterval(), mConfig.getInterval(), mConfig.getActivitiesInterval(),
+                    mConfig.getStopOnStillActivity());
         } catch (SecurityException e) {
             logger.error("Security exception: {}", e.getMessage());
             this.handleSecurityException(e);
@@ -118,7 +125,9 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
     }
 
     public void stopTracking() {
-        if (!isTracking) { return; }
+        if (!isTracking) {
+            return;
+        }
 
         LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
         isTracking = false;
@@ -126,11 +135,11 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
 
     private void connectToPlayAPI() {
         logger.debug("Connecting to Google Play Services");
-        googleApiClient =  new GoogleApiClient.Builder(mContext)
+        googleApiClient = new GoogleApiClient.Builder(mContext)
                 .addApi(LocationServices.API)
                 .addApi(ActivityRecognition.API)
                 .addConnectionCallbacks(this)
-                //.addOnConnectionFailedListener(this)
+                // .addOnConnectionFailedListener(this)
                 .build();
         googleApiClient.connect();
     }
@@ -145,14 +154,15 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
         if (googleApiClient == null) {
             connectToPlayAPI();
         } else if (googleApiClient.isConnected()) {
-            if (isWatchingActivity) { return; }
+            if (isWatchingActivity) {
+                return;
+            }
             startTracking();
             if (mConfig.getStopOnStillActivity()) {
                 ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
                         googleApiClient,
                         mConfig.getActivitiesInterval(),
-                        detectedActivitiesPI
-                );
+                        detectedActivitiesPI);
                 isWatchingActivity = true;
             }
         } else {
@@ -188,9 +198,10 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
     }
 
     /**
-     * Translates a number representing desired accuracy of Geolocation system from set [0, 10, 100, 1000].
-     * 0:  most aggressive, most accurate, worst battery drain
-     * 1000:  least aggressive, least accurate, best for battery.
+     * Translates a number representing desired accuracy of Geolocation system from
+     * set [0, 10, 100, 1000].
+     * 0: most aggressive, most accurate, worst battery drain
+     * 1000: least aggressive, least accurate, best for battery.
      */
     private Integer translateDesiredAccuracy(Integer accuracy) {
         if (accuracy >= 10000) {
@@ -212,13 +223,12 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
         return LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY;
     }
 
-
     public static DetectedActivity getProbableActivity(ArrayList<DetectedActivity> detectedActivities) {
         int highestConfidence = 0;
         DetectedActivity mostLikelyActivity = new DetectedActivity(0, DetectedActivity.UNKNOWN);
 
-        for(DetectedActivity da: detectedActivities) {
-            if(da.getType() != DetectedActivity.TILTING || da.getType() != DetectedActivity.UNKNOWN) {
+        for (DetectedActivity da : detectedActivities) {
+            if (da.getType() != DetectedActivity.TILTING || da.getType() != DetectedActivity.UNKNOWN) {
                 Log.w(TAG, "Received a Detected Activity that was not tilting / unknown");
                 if (highestConfidence < da.getConfidence()) {
                     highestConfidence = da.getConfidence();
@@ -235,10 +245,11 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
 
-            //Find the activity with the highest percentage
+            // Find the activity with the highest percentage
             lastActivity = getProbableActivity(detectedActivities);
 
-            logger.debug("Detected activity={} confidence={}", BackgroundActivity.getActivityString(lastActivity.getType()), lastActivity.getConfidence());
+            logger.debug("Detected activity={} confidence={}",
+                    BackgroundActivity.getActivityString(lastActivity.getType()), lastActivity.getConfidence());
 
             handleActivity(lastActivity);
 
@@ -250,7 +261,7 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
                 showDebugToast("Detected ACTIVE Activity");
                 startTracking();
             }
-            //else do nothing
+            // else do nothing
         }
     };
 
