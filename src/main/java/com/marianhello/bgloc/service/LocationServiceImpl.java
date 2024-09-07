@@ -176,15 +176,16 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
 
         mServiceId = System.currentTimeMillis();
 
-        // Start up the thread running the service.  Note that we create a
+        // Start up the thread running the service. Note that we create a
         // separate thread because the service normally runs in the process's
-        // main thread, which we don't want to block.  We also make it
+        // main thread, which we don't want to block. We also make it
         // background priority so CPU-intensive work will not disrupt our UI.
         if (mHandlerThread == null) {
             mHandlerThread = new HandlerThread("LocationServiceImpl.Thread", Process.THREAD_PRIORITY_BACKGROUND);
         }
         mHandlerThread.start();
-        // An Android service handler is a handler running on a specific background thread.
+        // An Android service handler is a handler running on a specific background
+        // thread.
         mServiceHandler = new ServiceHandler(mHandlerThread.getLooper());
 
         mResolver = ResourceResolver.newInstance(this);
@@ -215,11 +216,11 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
                         SyncService.sync(mSyncAccount, mResolver.getAuthority(), false);
                     }
                 }, new ConnectivityListener() {
-            @Override
-            public boolean hasConnectivity() {
-                return isNetworkAvailable();
-            }
-        });
+                    @Override
+                    public boolean hasConnectivity() {
+                        return isNetworkAvailable();
+                    }
+                });
 
         registerReceiver(connectivityChangeReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         NotificationHelper.registerServiceChannel(this);
@@ -238,14 +239,13 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 mHandlerThread.quitSafely();
             } else {
-                mHandlerThread.quit(); //sorry
+                mHandlerThread.quit(); // sorry
             }
         }
 
         if (mPostLocationTask != null) {
             mPostLocationTask.shutdown();
         }
-
 
         unregisterReceiver(connectivityChangeReceiver);
 
@@ -269,7 +269,7 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null) {
+        if (intent == null || !containsCommand(intent)) {
             // when service was killed and restarted we will restart service
             start();
             return START_STICKY;
@@ -280,8 +280,7 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
                 String.format("Service in [%s] state. cmdId: [%s]. startId: [%d]",
                         sIsRunning ? "STARTED" : "NOT STARTED",
                         containsCommand ? getCommand(intent).getId() : "N/A",
-                        startId)
-        );
+                        startId));
 
         if (containsCommand) {
             LocationServiceIntentBuilder.Command cmd = getCommand(intent);
@@ -353,7 +352,8 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
         mPostLocationTask.clearQueue();
 
         LocationProviderFactory spf = sLocationProviderFactory != null
-                ? sLocationProviderFactory : new LocationProviderFactory(this);
+                ? sLocationProviderFactory
+                : new LocationProviderFactory(this);
         mProvider = spf.getInstance(mConfig.getLocationProvider());
         mProvider.setDelegate(this);
         mProvider.onCreate();
@@ -457,14 +457,16 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
                             startForeground();
                         } else {
                             // was running in foreground, so just update existing notification
-                            Notification notification = new NotificationHelper.NotificationFactory(LocationServiceImpl.this).getNotification(
-                                    mConfig.getNotificationTitle(),
-                                    mConfig.getNotificationText(),
-                                    mConfig.getLargeNotificationIcon(),
-                                    mConfig.getSmallNotificationIcon(),
-                                    mConfig.getNotificationIconColor());
+                            Notification notification = new NotificationHelper.NotificationFactory(
+                                    LocationServiceImpl.this).getNotification(
+                                            mConfig.getNotificationTitle(),
+                                            mConfig.getNotificationText(),
+                                            mConfig.getLargeNotificationIcon(),
+                                            mConfig.getSmallNotificationIcon(),
+                                            mConfig.getNotificationIconColor());
 
-                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(
+                                    Context.NOTIFICATION_SERVICE);
                             notificationManager.notify(NOTIFICATION_ID, notification);
                         }
                     }
@@ -571,7 +573,7 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
         bundle.putParcelable("payload", location);
         broadcastMessage(bundle);
 
-        runHeadlessTask(new StationaryTask(location){
+        runHeadlessTask(new StationaryTask(location) {
             @Override
             public void onError(String errorMessage) {
                 logger.error("Stationary task error: {}", errorMessage);
@@ -595,7 +597,7 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
         bundle.putParcelable("payload", activity);
         broadcastMessage(bundle);
 
-        runHeadlessTask(new ActivityTask(activity){
+        runHeadlessTask(new ActivityTask(activity) {
             @Override
             public void onError(String errorMessage) {
                 logger.error("Activity task error: {}", errorMessage);
@@ -675,7 +677,8 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
     }
 
     /**
-     * Class used for the client Binder.  Since this service runs in the same process as its
+     * Class used for the client Binder. Since this service runs in the same process
+     * as its
      * clients, we don't need to deal with IPC.
      */
     public class LocalBinder extends Binder {
@@ -717,8 +720,7 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
     };
 
     private boolean isNetworkAvailable() {
-        ConnectivityManager cm =
-                (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
